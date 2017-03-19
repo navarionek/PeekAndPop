@@ -29,14 +29,37 @@ public class BlurBuilder {
         Bitmap inputBitmap = Bitmap.createScaledBitmap(image, width, height, false);
         Bitmap outputBitmap = Bitmap.createBitmap(inputBitmap);
 
-        RenderScript rs = RenderScript.create(ctx);
-        ScriptIntrinsicBlur theIntrinsic = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
-        Allocation tmpIn = Allocation.createFromBitmap(rs, inputBitmap);
-        Allocation tmpOut = Allocation.createFromBitmap(rs, outputBitmap);
-        theIntrinsic.setRadius(BLUR_RADIUS);
-        theIntrinsic.setInput(tmpIn);
-        theIntrinsic.forEach(tmpOut);
-        tmpOut.copyTo(outputBitmap);
+        RenderScript rs = null;
+        Allocation tmpIn = null;
+        Allocation tmpOut = null;
+        ScriptIntrinsicBlur intristicBlur = null;
+
+        try {
+            rs = RenderScript.create(ctx);
+            intristicBlur = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
+            tmpIn = Allocation.createFromBitmap(rs, inputBitmap);
+            tmpOut = Allocation.createFromBitmap(rs, outputBitmap);
+            intristicBlur.setRadius(BLUR_RADIUS);
+            intristicBlur.setInput(tmpIn);
+            intristicBlur.forEach(tmpOut);
+            tmpOut.copyTo(outputBitmap);
+        } finally {
+            if(rs != null) {
+                rs.destroy();
+            }
+
+            if(tmpIn != null) {
+                tmpIn.destroy();
+            }
+
+            if(tmpOut != null) {
+                tmpOut.destroy();
+            }
+
+            if(intristicBlur != null) {
+                intristicBlur.destroy();
+            }
+        }
 
         return darkenBitmap(outputBitmap);
     }
